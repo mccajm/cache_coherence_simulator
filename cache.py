@@ -136,15 +136,15 @@ class MESCache(Cache):
                                         False: {"M": "S",
                                                 "E": "S",
                                                 "S": "S",
-                                                None: "E"}},
+                                                None: None}},
                                   "W": {True: {"E": "M",
                                                "M": "M",
                                                "S": "S",
-                                               None: "E"},
+                                               None: "M"},
                                         False: {"S": "S",
                                                 "E": "S",
                                                 "M": "S",
-                                                None: "M"}}}
+                                                None: None}}}
         super(MESCache, self).__init__(*args, **kwargs)
 
     def submit_msg(self, cpuid, op, address, update_wire):
