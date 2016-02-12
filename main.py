@@ -1,6 +1,7 @@
-from cache import MESICache
+from cache import MESCache
 
-shared_wire = False 
+shared_wire = False
+update_wire = [None]*4
 def play_traceline(cache, line):
     if line == "h":
         print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
@@ -11,15 +12,14 @@ def play_traceline(cache, line):
     cpu_id, op, address = line.split(" ")
     cpu_id = int(cpu_id.lstrip("P"))
     address = int(address, 16)
-    global shared_wire
-    shared_wire = cache.submit_msg(cpu_id, op, address, shared_wire)
+    global update_wire 
+    update_wire = cache.submit_msg(cpu_id, op, address, update_wire)
 
 
 if __name__ == "__main__":
-    num_cpus = 4
     caches = []
-    for cpu_id in range(num_cpus):
-        caches.append(MESICache(cpu_id))
+    for cpu_id in range(4):
+        caches.append(MESCache(cpu_id))
 
     print("Reading file")
     with open("trace", "r") as f:

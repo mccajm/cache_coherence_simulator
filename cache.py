@@ -15,7 +15,8 @@ class Cache(object):
                       "W": {"HIT": 0,
                             "MISS": 0,
                             "TOTAL": 0},
-                      "INVALIDATED": 0}
+                      "INVALIDATED": 0,
+                      "UPDATED": 0}
         self.reset()
 
     def _map_address_to_block(self, address):
@@ -130,37 +131,31 @@ class MESCache(Cache):
         self.reset_state = None
         self.state_transitions = {"R": {True: {"E": "E",
                                                "S": "S",
-                                               "M": "M"},
+                                               "M": "E",
+                                               None: "E"},
                                         False: {"M": "S",
                                                 "E": "S",
-                                                "S": "S"}},
+                                                "S": "S",
+                                                None: "E"}},
                                   "W": {True: {"E": "M",
                                                "M": "M",
-                                               "S": "S"},
+                                               "S": "S",
+                                               None: "E"},
                                         False: {"S": "S",
                                                 "E": "S",
-                                                "M": "S"}}}
-        # R/W, Hit, S
-        self.reset_state_transitions = {"R": {False: {"E": "E",
-                                                      "M": "E",
-                                                      "S": "S"}},
-                                        "W": {False: {"E": "M",
-                                                      "M": "M",
-                                                      "S": "S"}}}
-        super(MESCache, self).__init__(self, *args, **kwargs)
+                                                "M": "S",
+                                                None: "M"}}}
+        super(MESCache, self).__init__(*args, **kwargs)
 
-    def submit_msg(self, cpuid, op, address):
-        hit = super().submit_msg(cpuid, op, address)
-        is_me = (cpu_id == self.cpu_id)
+    def submit_msg(self, cpuid, op, address, update_wire):
+        super(MESCache, self).submit_msg(cpuid, op, address)
+        is_me = (cpuid == self.cpu_id)
         index, tag = self._map_address_to_block(address)
-        if is_me:
-            try:
-                self.state_flags[index] = \
-                    self.state_transitions[op][hit][self.state_flags[index]]
-            except IndexError:
-                pass
+        update_wire[self.cpu_id] = None
+        num_updates = len([v for v in update_wire if v is not None])
+        self.stats["UPDATED"] += num_updates
+        if op == "W" and self.state_flags[index] == "S":
+            update_wire[self.cpu_id] = index
 
-            if op == "W" and selt.state_flags[index] == "S":
-                # send write update
-                pass
+        return update_wire
 
