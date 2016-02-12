@@ -40,8 +40,10 @@ class Cache(object):
         is_me = (cpu_id == self.cpu_id)
         index, tag = self._map_address_to_block(address)
         self.stats[op]["TOTAL"] += 1
+        hit = False
         if self.store[index] == tag:
             self.stats[op]["HIT"] += 1
+            hit = True
         else:
             self.stats[op]["MISS"] += 1
             self.store[index] = tag
@@ -49,22 +51,84 @@ class Cache(object):
         self.state_flags[index] = \
             self.state_transitions[op][is_me][self.state_flags[index]]
 
+        return hit
+
  
 class MSICache(Cache):
 
     def __init__(self, *args, **kwargs):
         self.reset_state = "I"
         self.state_transitions = {"R": {True: {"I": "S",
-                                                  "S": "S",
-                                                  "M": "M"},
-                                           False: {"M": "S",
-                                                   "S": "S",
-                                                   "I": "I"}},
+                                               "S": "S",
+                                               "M": "M"},
+                                        False: {"M": "S",
+                                                "S": "S",
+                                                "I": "I"}},
                                   "W": {True: {"I": "M",
-                                                   "S": "M",
-                                                   "M": "M"},
-                                            False: {"S": "I",
-                                                    "M": "I",
-                                                    "I": "I"}}}
+                                               "S": "M",
+                                               "M": "M"},
+                                        False: {"S": "I",
+                                                "M": "I",
+                                                "I": "I"}}}
         super().__init__(*args, **kwargs)
+
+
+class MESICache(Cache):
+
+    def __init__(self, *args, **kwargs):
+        self.reset_state = "I"
+        self.state_transitions = {"R": {True: {"I": "S",
+                                               "S": "S",
+                                               "M": "M"},
+                                        False: {"M": "S",
+                                                "S": "S",
+                                                "I": "I"}},
+                                  "W": {True: {"I": "M",
+                                               "S": "M",
+                                               "M": "M"},
+                                        False: {"S": "I",
+                                                "M": "I",
+                                                "I": "I"}}}
+        super().__init__(*args, **kwargs)
+
+
+class MESCache(Cache):
+
+    def __init__(self, *args, **kwargs):
+        self.reset_state = None
+        self.state_transitions = {"R": {True: {"E": "E",
+                                               "S": "S",
+                                               "M": "M"},
+                                        False: {"M": "S",
+                                                "E": "S",
+                                                "S": "S"}},
+                                  "W": {True: {"E": "M",
+                                               "M": "M",
+                                               "S": "S"},
+                                        False: {"S": "S",
+                                                "E": "S",
+                                                "M": "S"}}}
+        # R/W, Hit, S
+        self.reset_state_transitions = {"R": {False: {"E": "E",
+                                                      "M": "E",
+                                                      "S": "S"}},
+                                        "W": {False: {"E": "M",
+                                                      "M": "M",
+                                                      "S": "S"}}}
+        super().__init__(*args, **kwargs)
+
+    def submit_msg(self, cpuid, op, address):
+        hit = super().submit_msg(cpuid, op address)
+        is_me = (cpu_id == self.cpu_id)
+        index, tag = self._map_address_to_block(address)
+        if is_me:
+            try:
+                self.state_flags[index] = \
+                    self.state_transitions[op][hit][self.state_flags[index]]
+            except IndexError:
+                pass
+
+            if op == "W" and selt.state_flags[index] == "S":
+                # send write update
+                pass
 
