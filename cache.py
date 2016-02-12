@@ -17,7 +17,7 @@ class Cache(object):
                             "TOTAL": 0},
                       "INVALIDATED": 0,
                       "UPDATED": 0}
-        self.reset()
+        self._reset()
 
     def _map_address_to_block(self, address):
         binaddr = bin(address)[2:].zfill(32)
@@ -26,7 +26,7 @@ class Cache(object):
         tag = binaddr[:-(self.offset_bits + self.index_bits)]
         return index, tag
 
-    def reset(self):
+    def _reset(self):
         try:
             self.store = []
             self.state_flags = []
