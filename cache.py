@@ -39,14 +39,15 @@ class Cache(object):
     def submit_msg(self, cpu_id, op, address):
         is_me = (cpu_id == self.cpu_id)
         index, tag = self._map_address_to_block(address)
-        self.stats[op]["TOTAL"] += 1
         hit = False
-        if self.store[index] == tag:
-            self.stats[op]["HIT"] += 1
-            hit = True
-        else:
-            self.stats[op]["MISS"] += 1
-            self.store[index] = tag
+        if is_me:
+            self.stats[op]["TOTAL"] += 1
+            if self.store[index] == tag:
+                self.stats[op]["HIT"] += 1
+                hit = True
+            else:
+                self.stats[op]["MISS"] += 1
+                self.store[index] = tag
 
         self.state_flags[index] = \
             self.state_transitions[op][is_me][self.state_flags[index]]
@@ -118,7 +119,7 @@ class MESCache(Cache):
         super().__init__(*args, **kwargs)
 
     def submit_msg(self, cpuid, op, address):
-        hit = super().submit_msg(cpuid, op address)
+        hit = super().submit_msg(cpuid, op, address)
         is_me = (cpu_id == self.cpu_id)
         index, tag = self._map_address_to_block(address)
         if is_me:
