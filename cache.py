@@ -121,6 +121,7 @@ class MESICache(Cache):
                 self.shared_wire = True
 
         super(MESICache, self).submit_msg(cpu_id, op, address)
+        return shared_wire
 
 
 class MESCache(Cache):
