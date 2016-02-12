@@ -71,7 +71,7 @@ class MSICache(Cache):
                                         False: {"S": "I",
                                                 "M": "I",
                                                 "I": "I"}}}
-        super().__init__(*args, **kwargs)
+        super(MSICache, self).__init__(*args, **kwargs)
 
 
 class MESICache(Cache):
@@ -90,7 +90,7 @@ class MESICache(Cache):
                                         False: {"S": "I",
                                                 "M": "I",
                                                 "I": "I"}}}
-        super().__init__(*args, **kwargs)
+        super(MESICache, self).__init__(*args, **kwargs)
 
 
 class MESCache(Cache):
@@ -116,7 +116,7 @@ class MESCache(Cache):
                                         "W": {False: {"E": "M",
                                                       "M": "M",
                                                       "S": "S"}}}
-        super().__init__(*args, **kwargs)
+        super(MESCache, self).__init__(self, *args, **kwargs)
 
     def submit_msg(self, cpuid, op, address):
         hit = super().submit_msg(cpuid, op, address)
