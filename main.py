@@ -1,4 +1,4 @@
-from cache import MESICache
+from cache import MSICache
 
 shared_wire = False 
 def play_traceline(cache, line):
@@ -11,14 +11,14 @@ def play_traceline(cache, line):
     cpu_id, op, address = line.split(" ")
     cpu_id = int(cpu_id.lstrip("P"))
     address = int(address, 16)
-    cache.submit_msg(cpu_id, op, address, shared_wire)
+    cache.submit_msg(cpu_id, op, address)
 
 
 if __name__ == "__main__":
     num_cpus = 4
     caches = []
     for cpu_id in range(num_cpus):
-        caches.append(MESICache(cpu_id))
+        caches.append(MSICache(cpu_id))
 
     print("Reading file")
     with open("trace", "r") as f:

@@ -14,7 +14,8 @@ class Cache(object):
                             "TOTAL": 0},
                       "W": {"HIT": 0,
                             "MISS": 0,
-                            "TOTAL": 0}}
+                            "TOTAL": 0},
+                      "INVALIDATED": 0}
         self.reset()
 
     def _map_address_to_block(self, address):
@@ -43,14 +44,20 @@ class Cache(object):
         if is_me:
             self.stats[op]["TOTAL"] += 1
             if self.store[index] == tag:
-                self.stats[op]["HIT"] += 1
-                hit = True
+                if op == "W" and self.state_flags == "S":
+                    self.stats[op]["MISS"] += 1
+                else:
+                    self.stats[op]["HIT"] += 1
+                    hit = True
             else:
                 self.stats[op]["MISS"] += 1
                 self.store[index] = tag
 
+        old_flag = self.state_flags[index]
         self.state_flags[index] = \
             self.state_transitions[op][is_me][self.state_flags[index]]
+        if self.state_flags[index] == "I" and old_flag != "I":
+            self.stats["INVALIDATED"] += 1
 
         return hit
 
