@@ -44,12 +44,15 @@ class Cache(object):
         hit = False
         if is_me:
             self.stats[op]["TOTAL"] += 1
-            if self.store[index] == tag:
-                if op == "W" and self.state_flags == "S":
-                    self.stats[op]["MISS"] += 1
-                else:
-                    self.stats[op]["HIT"] += 1
-                    hit = True
+            if self.state_flags == "I":
+                self.stats[op]["MISS"] += 1
+                self.store[index] = tag
+            elif op == "W" and self.state_flags == "S":
+                self.stats[op]["MISS"] += 1
+                self.store[index] = tag
+            elif self.store[index] == tag:
+                self.stats[op]["HIT"] += 1
+                hit = True
             else:
                 self.stats[op]["MISS"] += 1
                 self.store[index] = tag
@@ -81,6 +84,10 @@ class MSICache(Cache):
                                                 "I": "I"}}}
         super(MSICache, self).__init__(*args, **kwargs)
 
+    def submit_msg(self, cpu_id, op, address, shared_wire, update_wire):
+        super(MSICache, self).submit_msg(cpu_id, op, address)
+        return shared_wire, update_wire
+
 
 class MESICache(Cache):
 
@@ -104,7 +111,7 @@ class MESICache(Cache):
                                                 "E": "I"}}}
         super(MESICache, self).__init__(*args, **kwargs)
 
-    def submit_msg(self, cpu_id, op, address, shared_wire):
+    def submit_msg(self, cpu_id, op, address, shared_wire, update_wire):
         try:
             se_flag_key = self.state_flags.index("SE")
             if shared_wire:
@@ -118,11 +125,11 @@ class MESICache(Cache):
         is_me = (cpu_id == self.cpu_id)
         if not is_me and op == "R":
             index, tag = self._map_address_to_block(address)
-            if self.store[index] == tag:
+            if self.state_flags[index] == "E" or self.state_flags[index] == "S" or self.state_flags[index] == "M":
                 self.shared_wire = True
 
         super(MESICache, self).submit_msg(cpu_id, op, address)
-        return shared_wire
+        return shared_wire, update_wire
 
 
 class MESCache(Cache):
@@ -131,8 +138,8 @@ class MESCache(Cache):
         self.reset_state = None
         self.state_transitions = {"R": {True: {"E": "E",
                                                "S": "S",
-                                               "M": "E",
-                                               None: "E"},
+                                               "M": "M",
+                                               None: None},
                                         False: {"M": "S",
                                                 "E": "S",
                                                 "S": "S",
@@ -140,22 +147,52 @@ class MESCache(Cache):
                                   "W": {True: {"E": "M",
                                                "M": "M",
                                                "S": "S",
-                                               None: "M"},
+                                               None: None},
                                         False: {"S": "S",
                                                 "E": "S",
                                                 "M": "S",
                                                 None: None}}}
         super(MESCache, self).__init__(*args, **kwargs)
 
-    def submit_msg(self, cpuid, op, address, update_wire):
-        super(MESCache, self).submit_msg(cpuid, op, address)
-        is_me = (cpuid == self.cpu_id)
+    def submit_msg(self, cpuid, op, address, shared_wire, update_wire):
         index, tag = self._map_address_to_block(address)
-        update_wire[self.cpu_id] = None
-        num_updates = len([v for v in update_wire if v is not None])
-        self.stats["UPDATED"] += num_updates
-        if op == "W" and self.state_flags[index] == "S":
-            update_wire[self.cpu_id] = index
+        try:
+            es_flag_key = self.state_flags.index("ES")
+            if shared_wire:
+                self.state_flags[es_flag_key] = "S"
+                shared_wire = false
+            else:
+                self.state_flags[es_flag_key] = "E"
+        except ValueError:
+            pass  # no values are in es state
 
-        return update_wire
+        try:
+            sm_flag_key = self.state_flags.index("SM")
+            if shared_wire:
+                self.state_flags[sm_flag_key] = "S"
+                shared_wire = false
+            else:
+                self.state_flags[sm_flag_key] = "M"
+        except ValueError:
+            pass  # no values are in sm state
+
+        hit = super(MESCache, self).submit_msg(cpuid, op, address)
+        is_me = (cpuid == self.cpu_id)
+        update_wire[self.cpu_id] = None
+        updates = [v for v in update_wire if v is not None]
+        self.stats["UPDATED"] += len(updates)
+        for update in updates:
+            index_update, tag_update = self._map_address_to_block(update)
+            self.store[index_update] = tag_update
+            self.state_flags[index_update] = "S"
+
+        if op == "W" and self.state_flags[index] == "S":
+            update_wire[self.cpu_id] = address 
+        elif not hit:
+            if op == "R":
+                self.state_flags[index] = "ES"
+            else:
+                self.state_flags[index] = "SM"
+
+        return shared_wire, update_wire
 
