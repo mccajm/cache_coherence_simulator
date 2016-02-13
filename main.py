@@ -1,4 +1,7 @@
-from cache import MSICache, MESICache, MESCache
+from cache.msi import MSICache
+from cache.mesi import MESICache
+from cache.mes import MESCache
+
 
 def int_or_None(i):
     try:
@@ -45,7 +48,4 @@ if __name__ == "__main__":
 
         for cache in caches:
             play_traceline(cache, "i")
-
-        for cache in caches:
-            play_traceline(cache, "p")
 
