@@ -34,18 +34,13 @@ class MESICache(Cache):
 
             is_me = (cpu_id == self.cpu_id)
             if is_me and op == "S":
-                msg_expected = False
                 index, tag = self._map_address_to_block(address)
                 try:
                     se_flag_index = self.state_flags.index("SE")
                     if index == se_flag_index:
-                        message_expected = True
                         self.state_flags[se_flag_index] = "S"
                 except ValueError:
                     pass
-
-                if not msg_expected and self.state_flags[index] == "I":  # Received early
-                    backup_messages.append((cpu_id, op, address))
             elif not is_me and op == "R":
                 index, tag = self._map_address_to_block(address)
                 if self.state_flags[index] == "E" or self.state_flags[index] == "S" or self.state_flags[index] == "M":

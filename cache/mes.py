@@ -39,13 +39,11 @@ class MESCache(Cache):
                 try:
                     es_flag_index = self.state_flags.index("ES")
                     if index == es_flag_index:
-                        message_expected = True
                         self.state_flags[es_flag_index] = "S"
                 except ValueError:
                     try:
                         sm_flag_index = self.state_flags.index("SM")
                         if index == sm_flag_index:
-                            message_expected = True
                             self.state_flags[sm_flag_index] = "S"
                     except ValueError:
                         pass  # no values are in ES or SM state
