@@ -26,7 +26,7 @@ class Cache(object):
         offset = binaddr[-self.offset_bits:]
         index = int(binaddr[-(self.offset_bits + self.index_bits):-self.offset_bits], 2)
         tag = binaddr[:-(self.offset_bits + self.index_bits)]
-        return index, tag
+        return (index, tag)
 
     def _reset(self):
         try:
