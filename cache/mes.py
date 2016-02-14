@@ -34,18 +34,8 @@ class MESCache(Cache):
 
             is_me = (cpu_id == self.cpu_id)
             index, tag = self._map_address_to_block(address)
-            if op == "S":
-                try:
-                    es_flag_index = self.state_flags.index("ES")
-                    if index == es_flag_index:
-                        self.state_flags[es_flag_index] = "S"
-                except ValueError:
-                    try:
-                        sm_flag_index = self.state_flags.index("SM")
-                        if index == sm_flag_index:
-                            self.state_flags[sm_flag_index] = "S"
-                    except ValueError:
-                        pass  # no values are in ES or SM state
+            if op == "S" and self.state_flags[index] in ("ES", "SM"):
+                self.state_flags[index] = "S"
             elif not is_me and op == "R":
                 if self.state_flags[index] in ("E", "S", "M"):
                     self.buses[cpu_id].put((self.cpu_id, "S", address))
@@ -73,9 +63,9 @@ class MESCache(Cache):
 
         index, _ = self._map_address_to_block(address)
         if op == "W" and self.state_flags[index] == "S":
+            self.stats["WRITEBACK"] += 1
             other_buses = [i for i in range(len(self.buses)) if i != self.cpu_id]
             for bus_id in other_buses:
-                self.stats["WRITEBACK"] += 1
                 self.buses[bus_id].put((self.cpu_id, "U", address))
 
             self.stats["UPDATED"] += 1
