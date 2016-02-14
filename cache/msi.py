@@ -19,7 +19,7 @@ class MSICache(Cache):
                                                 "I": "I"}}}
         super(MSICache, self).__init__(*args, **kwargs)
 
-    def submit_msg(self, cpu_id, op, address, shared_wire, update_wire):
+    def run_cycle(self):
+        cpu_id, op, address = self.buses[self.cpu_id].get_nowait()
         super(MSICache, self).submit_msg(cpu_id, op, address)
-        return shared_wire, update_wire
 

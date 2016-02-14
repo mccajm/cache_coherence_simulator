@@ -1,16 +1,17 @@
+import sys
+
+from pprint import pprint
+from Queue import Queue
+
+from tqdm import tqdm
+
 from cache.msi import MSICache
 from cache.mesi import MESICache
 from cache.mes import MESCache
+from utils import int_or_None
 
 
-def int_or_None(i):
-    try:
-        return int(i, 2)
-    except TypeError:
-        return i 
-
-shared_wire = False
-update_wire = [None]*4
+buses = (Queue(), Queue(), Queue(), Queue())
 def play_traceline(cache, line):
     if line == "h":
         print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
@@ -22,30 +23,31 @@ def play_traceline(cache, line):
     elif line == "p":
         print("Cache P%d %s" % (cache.cpu_id,
                                 [int_or_None(v) for v in cache.store]))
+    elif line == "s":
+        sys.stdout.write("P%d: " % cache.cpu_id)
+        pprint(cache.stats)
     else:
         cpu_id, op, address = line.split(" ")
         cpu_id = int(cpu_id.lstrip("P"))
         address = int(address, 16)
-        global update_wire, shared_wire
-        shared_wire, update_wire = cache.submit_msg(cpu_id, op, address, shared_wire, update_wire)
+        buses[cache.cpu_id].put((cpu_id, op, address))
+        cache.run_cycle()
 
 
 if __name__ == "__main__":
+    with open("trace", "r") as f:
+        lines = f.readlines()
+
     for cache in (MSICache, MESICache, MESCache):
         caches = []
         for cpu_id in range(4):
-            caches.append(cache(cpu_id))
+            caches.append(cache(cpu_id, buses))
 
-        print("Reading file")
-        with open("trace", "r") as f:
-            for line in f:
-                for cache in caches:
-                    play_traceline(cache, line)
-
-        print("File read")
-        for cache in caches:
-            play_traceline(cache, "h")
+        print("Processing trace with %s..." % caches[-1].__class__.__name__)
+        for line in tqdm(lines, leave=True):
+            for cache in caches:
+                play_traceline(cache, line)
 
         for cache in caches:
-            play_traceline(cache, "i")
+            play_traceline(cache, "s")
 

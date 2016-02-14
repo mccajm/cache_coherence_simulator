@@ -3,12 +3,13 @@ import math
 
 class Cache(object):
 
-    def __init__(self, cpu_id, block_size=4):
+    def __init__(self, cpu_id, buses, block_size=4):
         self.block_size = block_size  # assuming 32 bit architecture
         self.num_cache_lines = int(2048/self.block_size)
         self.offset_bits = int(math.log(self.block_size, 2))
         self.index_bits = int(math.log(self.num_cache_lines, 2))
         self.cpu_id = cpu_id
+        self.buses = buses
         self.stats = {"R": {"HIT": 0,
                             "MISS": 0,
                             "TOTAL": 0},
@@ -16,7 +17,8 @@ class Cache(object):
                             "MISS": 0,
                             "TOTAL": 0},
                       "INVALIDATED": 0,
-                      "UPDATED": 0}
+                      "UPDATED": 0,
+                      "WRITEBACK": 0}
         self._reset()
 
     def _map_address_to_block(self, address):
@@ -56,6 +58,8 @@ class Cache(object):
             else:
                 self.stats[op]["MISS"] += 1
                 self.store[index] = tag
+        elif self.state_flags[index] == "M":
+            self.stats["WRITEBACK"] += 1
 
         old_flag = self.state_flags[index]
         self.state_flags[index] = \
