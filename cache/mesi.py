@@ -25,9 +25,7 @@ class MESICache(Cache):
                                                        "E": "I"}}}
         super(MESICache, self).__init__(*args, **kwargs)
 
-    def run_cycle(self):
-        backup_messages = []
-        read_miss_msg = None
+    def stage1(self, cpu_id, op, address):
         while True:
             try:
                 cpu_id, op, address = self.buses[self.cpu_id].get_nowait()
@@ -53,18 +51,12 @@ class MESICache(Cache):
                 if self.state_flags[index] == "E" or self.state_flags[index] == "S" or self.state_flags[index] == "M":
                     self.buses[cpu_id].put((cpu_id, "S", address))
 
-            if op == "R" or op == "W":
-                # This ensures we always process the read_miss_msg last
-                read_miss_msg = (cpu_id, op, address)
-
         try:
             se_flag_index = self.state_flags.index("SE")
             self.state_flags[se_flag_index] = "E"
         except ValueError:
             pass
 
-        for msg in backup_messages:
-            self.buses[self.cpu_id].put(msg)
-
-        super(MESICache, self).submit_msg(*read_miss_msg)
+    def stage2(self, *args):
+        super(MESICache, self).submit_msg(*args)
 

@@ -12,7 +12,7 @@ from utils import int_or_None
 
 
 buses = (Queue(), Queue(), Queue(), Queue())
-def play_traceline(cache, line):
+def print_stats(cache, line):
     if line == "h":
         print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
                                           cache.stats["R"]["HIT"],
@@ -26,28 +26,43 @@ def play_traceline(cache, line):
     elif line == "s":
         sys.stdout.write("P%d: " % cache.cpu_id)
         pprint(cache.stats)
-    else:
-        cpu_id, op, address = line.split(" ")
-        cpu_id = int(cpu_id.lstrip("P"))
-        address = int(address, 16)
-        buses[cache.cpu_id].put((cpu_id, op, address))
-        cache.run_cycle()
+
+def parse_line(line):
+    if len(line) == 1:
+        return (None, line, None)
+
+    cpu_id, op, address = line.split(" ")
+    cpu_id = int(cpu_id.lstrip("P"))
+    address = int(address, 16)
+    return (cpu_id, op, address)
+
+def run_stages(caches, cpu_id, op, address):
+    for cache in caches:
+        cache.stage1(cpu_id, op, address)
+
+    if op in ("R", "W"):
+        for cache in caches:
+            cache.stage2(cpu_id, op, address)
 
 
 if __name__ == "__main__":
     with open("trace", "r") as f:
         lines = f.readlines()
 
-    for cache in (MSICache, MESICache, MESCache):
+    for cache in (MSICache, MESICache): # MESICache, MESCache):
         caches = []
         for cpu_id in range(4):
             caches.append(cache(cpu_id, buses))
 
         print("Processing trace with %s..." % caches[-1].__class__.__name__)
         for line in tqdm(lines, leave=True):
-            for cache in caches:
-                play_traceline(cache, line)
+            cpu_id, op, address = parse_line(line)
+            if op in ("h", "i", "p", "s"):
+                for cache in caches:
+                    print_stats(cache, op)
+            else:
+                run_stages(caches, cpu_id, op, address)
 
         for cache in caches:
-            play_traceline(cache, "s")
+            print_stats(cache, "s")
 
