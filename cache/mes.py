@@ -35,7 +35,7 @@ class MESCache(Cache):
                 break  # the bus is empty
 
             is_me = (cpu_id == self.cpu_id)
-            if is_me and op == "S":
+            if op == "S":
                 msg_expected = False
                 index, tag = self._map_address_to_block(address)
                 try:
@@ -50,20 +50,20 @@ class MESCache(Cache):
                             message_expected = True
                             self.state_flags[sm_flag_index] = "S"
                     except ValueError:
-                        pass  # no values are in sm state
+                        pass  # no values are in ES or SM state
 
                 if not msg_expected:  # Received early
                     backup_messages.append((cpu_id, op, address))
             elif not is_me and op == "R":
                 index, tag = self._map_address_to_block(address)
-                if self.state_flags[index] == "E" or self.state_flags[index] == "S" or self.state_flags[index] == "M":
-                    self.buses[cpu_id].put((cpu_id, "S", address))
-            elif is_me and op == "U":
+                if self.state_flags[index] in ("E", "S", "M"):
+                    self.buses[cpu_id].put((self.cpu_id, "S", address))
+            elif op == "U":
                 index_update, tag_update = self._map_address_to_block(address)
                 self.store[index_update] = tag_update
                 self.state_flags[index_update] = "S"
 
-            if op == "R" or op == "W":
+            if op in ("R", "W"):
                 # This ensures we always process the read_miss_msg last
                 read_miss_msg = (cpu_id, op, address)
 
@@ -85,9 +85,10 @@ class MESCache(Cache):
         cpu_id, op, address = read_miss_msg
         hit = super(MESCache, self).submit_msg(cpu_id, op, address)
         index, tag = self._map_address_to_block(address)
-        if op == "W" and self.state_flags[index] == "S":
+        if is_me and op == "W" and self.state_flags[index] == "S":
             other_buses = [i for i in range(len(self.buses)) if i != self.cpu_id]
             for bus_id in other_buses:
+                self.stats["WRITEBACK"] += 1
                 self.buses[bus_id].put((self.cpu_id, "U", address))
 
             self.stats["UPDATED"] += 1
