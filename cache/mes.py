@@ -25,9 +25,7 @@ class MESCache(Cache):
                                                 None: None}}}
         super(MESCache, self).__init__(*args, **kwargs)
 
-    def run_cycle(self):
-        backup_messages = []
-        read_miss_msg = None
+    def stage1(self):
         while True:
             try:
                 cpu_id, op, address = self.buses[self.cpu_id].get_nowait()
@@ -51,9 +49,6 @@ class MESCache(Cache):
                             self.state_flags[sm_flag_index] = "S"
                     except ValueError:
                         pass  # no values are in ES or SM state
-
-                if not msg_expected:  # Received early
-                    backup_messages.append((cpu_id, op, address))
             elif not is_me and op == "R":
                 index, tag = self._map_address_to_block(address)
                 if self.state_flags[index] in ("E", "S", "M"):
@@ -62,10 +57,6 @@ class MESCache(Cache):
                 index_update, tag_update = self._map_address_to_block(address)
                 self.store[index_update] = tag_update
                 self.state_flags[index_update] = "S"
-
-            if op in ("R", "W"):
-                # This ensures we always process the read_miss_msg last
-                read_miss_msg = (cpu_id, op, address)
 
         try:
             es_flag_index = self.state_flags.index("ES")
@@ -79,20 +70,21 @@ class MESCache(Cache):
         except ValueError:
             pass
 
-        for msg in backup_messages[:-1]:
-            self.buses[self.cpu_id].put(msg)
-
-        cpu_id, op, address = read_miss_msg
+    def stage2(self, cpu_id, op, address):
         hit = super(MESCache, self).submit_msg(cpu_id, op, address)
         index, tag = self._map_address_to_block(address)
-        if is_me and op == "W" and self.state_flags[index] == "S":
+        is_me = (cpu_id == self.cpu_id)
+        if not is_me:
+            return
+
+        if op == "W" and self.state_flags[index] == "S":
             other_buses = [i for i in range(len(self.buses)) if i != self.cpu_id]
             for bus_id in other_buses:
                 self.stats["WRITEBACK"] += 1
                 self.buses[bus_id].put((self.cpu_id, "U", address))
 
             self.stats["UPDATED"] += 1
-        elif is_me and not hit:
+        elif not hit:
             if op == "R":
                 self.state_flags[index] = "ES"
             else:

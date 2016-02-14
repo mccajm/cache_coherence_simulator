@@ -25,7 +25,7 @@ class MESICache(Cache):
                                                        "E": "I"}}}
         super(MESICache, self).__init__(*args, **kwargs)
 
-    def stage1(self, cpu_id, op, address):
+    def stage1(self):
         while True:
             try:
                 cpu_id, op, address = self.buses[self.cpu_id].get_nowait()

@@ -38,7 +38,7 @@ def parse_line(line):
 
 def run_stages(caches, cpu_id, op, address):
     for cache in caches:
-        cache.stage1(cpu_id, op, address)
+        cache.stage1()
 
     if op in ("R", "W"):
         for cache in caches:
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     with open("trace", "r") as f:
         lines = f.readlines()
 
-    for cache in (MSICache, MESICache): # MESICache, MESCache):
+    for cache in (MSICache, MESICache, MESCache):
         caches = []
         for cpu_id in range(4):
             caches.append(cache(cpu_id, buses))
