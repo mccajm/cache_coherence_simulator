@@ -33,9 +33,8 @@ class MESCache(Cache):
                 break  # the bus is empty
 
             is_me = (cpu_id == self.cpu_id)
+            index, tag = self._map_address_to_block(address)
             if op == "S":
-                msg_expected = False
-                index, tag = self._map_address_to_block(address)
                 try:
                     es_flag_index = self.state_flags.index("ES")
                     if index == es_flag_index:
@@ -48,13 +47,11 @@ class MESCache(Cache):
                     except ValueError:
                         pass  # no values are in ES or SM state
             elif not is_me and op == "R":
-                index, tag = self._map_address_to_block(address)
                 if self.state_flags[index] in ("E", "S", "M"):
                     self.buses[cpu_id].put((self.cpu_id, "S", address))
             elif op == "U":
-                index_update, tag_update = self._map_address_to_block(address)
-                self.store[index_update] = tag_update
-                self.state_flags[index_update] = "S"
+                self.store[index] = tag
+                self.state_flags[index] = "S"
 
         try:
             es_flag_index = self.state_flags.index("ES")
@@ -70,11 +67,11 @@ class MESCache(Cache):
 
     def stage2(self, cpu_id, op, address):
         hit = super(MESCache, self).submit_msg(cpu_id, op, address)
-        index, tag = self._map_address_to_block(address)
         is_me = (cpu_id == self.cpu_id)
         if not is_me:
             return
 
+        index, _ = self._map_address_to_block(address)
         if op == "W" and self.state_flags[index] == "S":
             other_buses = [i for i in range(len(self.buses)) if i != self.cpu_id]
             for bus_id in other_buses:

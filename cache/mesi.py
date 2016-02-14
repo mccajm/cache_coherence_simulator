@@ -33,8 +33,8 @@ class MESICache(Cache):
                 break  # the bus is empty
 
             is_me = (cpu_id == self.cpu_id)
-            if is_me and op == "S":
-                index, tag = self._map_address_to_block(address)
+            index, tag = self._map_address_to_block(address)
+            if op == "S":
                 try:
                     se_flag_index = self.state_flags.index("SE")
                     if index == se_flag_index:
@@ -42,9 +42,8 @@ class MESICache(Cache):
                 except ValueError:
                     pass
             elif not is_me and op == "R":
-                index, tag = self._map_address_to_block(address)
-                if self.state_flags[index] == "E" or self.state_flags[index] == "S" or self.state_flags[index] == "M":
-                    self.buses[cpu_id].put((cpu_id, "S", address))
+                if self.state_flags[index] in ("E", "S", "M"):
+                    self.buses[cpu_id].put((self.cpu_id, "S", address))
 
         try:
             se_flag_index = self.state_flags.index("SE")
