@@ -52,13 +52,9 @@ class Cache(object):
         hit = False
         if is_me:
             self.stats[op]["TOTAL"] += 1
-            if self.state_flags == "I":
-                self.stats[op]["MISS"] += 1
-                self.store[index] = tag
-            elif op == "W" and self.state_flags == "S":
-                self.stats[op]["MISS"] += 1
-                self.store[index] = tag
-            elif self.store[index] == tag:
+            if (self.state_flags != "I") and not \
+               (op == "W" and self.state_flags == "S") and \
+               (self.store[index] == tag):
                 self.stats[op]["HIT"] += 1
                 hit = True
             else:
