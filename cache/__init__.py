@@ -68,7 +68,7 @@ class Cache(object):
         if self.state_flags[index] == "I" and old_flag != "I":
             self.stats["INVALIDATED"] += 1
         elif self.invalidation_based and \
-             self.state_flags[index] == "M" and old_flag != "M":
+             self.state_flags[index] == "M" and old_flag not in ("M", "E"):
             self.stats["WRITEBACK"] += 1
         elif not self.invalidation_based and \
                  self.state_flags[index] == "S" and \

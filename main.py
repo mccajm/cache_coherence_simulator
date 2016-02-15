@@ -66,7 +66,7 @@ if __name__ == "__main__":
             for cpu_id in range(4):
                 caches.append(cache(cpu_id, buses, block_size=block_size))
 
-            print("Processing trace with %s..." % caches[-1].__class__.__name__)
+            print("Processing trace with %s at block size %d..." % (caches[-1].__class__.__name__, block_size))
             for line in tqdm(lines, leave=True):
                 cpu_id, op, address = parse_line(line)
                 if op in ("h", "i", "p", "s"):
