@@ -1,5 +1,3 @@
-from Queue import Empty
-
 from cache import Cache
 
 
@@ -28,20 +26,22 @@ class MESCache(Cache):
     def stage1(self):
         while True:
             try:
-                cpu_id, op, address = self.buses[self.cpu_id].get_nowait()
-            except Empty:
+                cpu_id, op, address = self.buses[self.cpu_id].pop()
+            except IndexError:
                 break  # the bus is empty
 
             is_me = (cpu_id == self.cpu_id)
             index, tag = self._map_address_to_block(address)
             if op == "S" and self.state_flags[index] in ("ES", "SM"):
                 self.state_flags[index] = "S"
+                self.stats["WRITEBACK"] += 1
             elif not is_me and op == "R":
                 if self.state_flags[index] in ("E", "S", "M"):
-                    self.buses[cpu_id].put((self.cpu_id, "S", address))
+                    self.buses[cpu_id].append((self.cpu_id, "S", address))
             elif op == "U":
                 self.store[index] = tag
                 self.state_flags[index] = "S"
+                self.stats["WRITEUPDATED"] += 1
 
         try:
             es_flag_index = self.state_flags.index("ES")
@@ -66,9 +66,9 @@ class MESCache(Cache):
             self.stats["WRITEBACK"] += 1
             other_buses = [i for i in range(len(self.buses)) if i != self.cpu_id]
             for bus_id in other_buses:
-                self.buses[bus_id].put((self.cpu_id, "U", address))
+                self.buses[bus_id].append((self.cpu_id, "U", address))
 
-            self.stats["UPDATED"] += 1
+            self.stats["WRITEUPDATES"] += 1
         elif not hit:
             if op == "R":
                 self.state_flags[index] = "ES"

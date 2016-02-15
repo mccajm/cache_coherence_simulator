@@ -1,5 +1,7 @@
 import math
 
+from utils import nested_dict_values
+
 
 class Cache(object):
 
@@ -16,16 +18,17 @@ class Cache(object):
                       "W": {"HIT": 0,
                             "MISS": 0,
                             "TOTAL": 0},
+                      "INVALIDATES": 0,
                       "INVALIDATED": 0,
-                      "UPDATED": 0,
+                      "WRITEUPDATES": 0,
+                      "WRITEUPDATED": 0,
                       "WRITEBACK": 0}
+        self.invalidation_based = self._is_invalidation_based()
         self._reset()
 
     def _map_address_to_block(self, address):
-        binaddr = bin(address)[2:].zfill(32)
-        offset = binaddr[-self.offset_bits:]
-        index = int(binaddr[-(self.offset_bits + self.index_bits):-self.offset_bits], 2)
-        tag = binaddr[:-(self.offset_bits + self.index_bits)]
+        index = int(address[-(self.offset_bits + self.index_bits):-self.offset_bits], 2)
+        tag = address[:-(self.offset_bits + self.index_bits)]
         return (index, tag)
 
     def _reset(self):
@@ -39,6 +42,9 @@ class Cache(object):
             raise Exception("Cache class must be subclassed with"
                             "definitions for reset_state and"
                             "state_transitions")
+
+    def _is_invalidation_based(self):
+        return "I" in nested_dict_values(self.state_transitions)
     
     def submit_msg(self, cpu_id, op, address):
         is_me = (cpu_id == self.cpu_id)
@@ -58,14 +64,24 @@ class Cache(object):
             else:
                 self.stats[op]["MISS"] += 1
                 self.store[index] = tag
-        elif self.state_flags[index] == "M":
-            self.stats["WRITEBACK"] += 1
 
         old_flag = self.state_flags[index]
         self.state_flags[index] = \
             self.state_transitions[op][is_me][self.state_flags[index]]
+
         if self.state_flags[index] == "I" and old_flag != "I":
             self.stats["INVALIDATED"] += 1
+        elif self.invalidation_based and \
+             self.state_flags[index] == "M" and old_flag != "M":
+            self.stats["WRITEBACK"] += 1
+        elif not self.invalidation_based and \
+                 self.state_flags[index] == "S" and \
+                 old_flag == "M":
+            self.stats["WRITEBACK"] += 1
+
+        if self.invalidation_based and is_me and op == "W":
+            self.stats["INVALIDATES"] += 1
+
 
         return hit
 

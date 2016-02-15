@@ -1,7 +1,6 @@
 import sys
 
 from pprint import pprint
-from Queue import Queue
 
 from tqdm import tqdm
 
@@ -11,7 +10,7 @@ from cache.mes import MESCache
 from utils import int_or_None
 
 
-buses = (Queue(), Queue(), Queue(), Queue())
+buses = ([], [], [], [])
 def print_stats(cache, line):
     if line == "h":
         print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
@@ -34,7 +33,8 @@ def parse_line(line):
     cpu_id, op, address = line.split(" ")
     cpu_id = int(cpu_id.lstrip("P"))
     address = int(address, 16)
-    return (cpu_id, op, address)
+    binaddr = bin(address)[2:].zfill(32)
+    return (cpu_id, op, binaddr)
 
 def run_stages(caches, cpu_id, op, address):
     for cache in caches:
