@@ -1,4 +1,5 @@
 import sys
+import pickle
 
 from pprint import pprint
 
@@ -9,6 +10,14 @@ from cache.mesi import MESICache
 from cache.mes import MESCache
 from utils import int_or_None
 
+
+stats = {"MSICache": {},
+         "MESICache": {},
+         "MESCache": {}}
+def record_stats(caches):
+    global stats
+    for cache in caches:
+        stats[cache.__class__.__name__][cache.block_size] = cache.stats
 
 def print_stats(caches, line):
     for cache in caches:
@@ -50,18 +59,23 @@ if __name__ == "__main__":
         lines = f.readlines()
 
     buses = ([], [], [], [])
+    block_sizes = (2, 4, 8, 16)
     for cache in (MSICache, MESICache, MESCache):
-        caches = []
-        for cpu_id in range(4):
-            caches.append(cache(cpu_id, buses))
+        for block_size in block_sizes:
+            caches = []
+            for cpu_id in range(4):
+                caches.append(cache(cpu_id, buses, block_size=block_size))
 
-        print("Processing trace with %s..." % caches[-1].__class__.__name__)
-        for line in tqdm(lines, leave=True):
-            cpu_id, op, address = parse_line(line)
-            if op in ("h", "i", "p", "s"):
-                print_stats(caches, op)
-            else:
-                run_stages(caches, cpu_id, op, address)
+            print("Processing trace with %s..." % caches[-1].__class__.__name__)
+            for line in tqdm(lines, leave=True):
+                cpu_id, op, address = parse_line(line)
+                if op in ("h", "i", "p", "s"):
+                    print_stats(caches, op)
+                else:
+                    run_stages(caches, cpu_id, op, address)
 
-        print_stats(caches, "s")
+#            print_stats(caches, "s")
+            record_stats(caches)
 
+    with open("stats-block_size.pkl", "wb") as f:
+        pickle.dump(stats, f)
