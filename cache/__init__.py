@@ -13,9 +13,11 @@ class Cache(object):
         self.cpu_id = cpu_id
         self.buses = buses
         self.stats = {"R": {"HIT": 0,
+                            "HIT_PRIV": 0,
                             "MISS": 0,
                             "TOTAL": 0},
                       "W": {"HIT": 0,
+                            "HIT_PRIV": 0,
                             "MISS": 0,
                             "TOTAL": 0},
                       "INVALIDATES": 0,
@@ -56,6 +58,8 @@ class Cache(object):
                (op == "W" and self.state_flags == "S") and \
                (self.store[index] == tag):
                 self.stats[op]["HIT"] += 1
+                if self.state_flags in ("M", "E"):
+                    self.stats[op]["HIT_PRIV"] += 1
                 hit = True
             else:
                 self.stats[op]["MISS"] += 1
