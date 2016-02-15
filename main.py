@@ -10,21 +10,21 @@ from cache.mes import MESCache
 from utils import int_or_None
 
 
-buses = ([], [], [], [])
-def print_stats(cache, line):
-    if line == "h":
-        print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
-                                          cache.stats["R"]["HIT"],
-                                          cache.stats["W"]["HIT"]))
-    elif line == "i":
-        print("Invalidations P%d %d" % (cache.cpu_id,
-                                        cache.stats["INVALIDATED"]))
-    elif line == "p":
-        print("Cache P%d %s" % (cache.cpu_id,
-                                [int_or_None(v) for v in cache.store]))
-    elif line == "s":
-        sys.stdout.write("P%d: " % cache.cpu_id)
-        pprint(cache.stats)
+def print_stats(caches, line):
+    for cache in caches:
+        if line == "h":
+            print("Hit Rate P%d R:%d W:%d" % (cache.cpu_id,
+                                              cache.stats["R"]["HIT"],
+                                              cache.stats["W"]["HIT"]))
+        elif line == "i":
+            print("Invalidations P%d %d" % (cache.cpu_id,
+                                            cache.stats["INVALIDATED"]))
+        elif line == "p":
+            print("Cache P%d %s" % (cache.cpu_id,
+                                    [int_or_None(v) for v in cache.store]))
+        elif line == "s":
+            sys.stdout.write("P%d: " % cache.cpu_id)
+            pprint(cache.stats)
 
 def parse_line(line):
     if len(line) == 1:
@@ -49,6 +49,7 @@ if __name__ == "__main__":
     with open("trace", "r") as f:
         lines = f.readlines()
 
+    buses = ([], [], [], [])
     for cache in (MSICache, MESICache, MESCache):
         caches = []
         for cpu_id in range(4):
@@ -58,11 +59,9 @@ if __name__ == "__main__":
         for line in tqdm(lines, leave=True):
             cpu_id, op, address = parse_line(line)
             if op in ("h", "i", "p", "s"):
-                for cache in caches:
-                    print_stats(cache, op)
+                print_stats(caches, op)
             else:
                 run_stages(caches, cpu_id, op, address)
 
-        for cache in caches:
-            print_stats(cache, "s")
+        print_stats(caches, "s")
 
