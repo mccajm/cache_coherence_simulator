@@ -1,7 +1,4 @@
-import sys
 import pickle
-
-from pprint import pprint
 
 from tqdm import tqdm
 

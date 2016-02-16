@@ -1,3 +1,8 @@
+import sys
+
+from pprint import pprint
+
+
 class Bus:
 
     def __init__(self, cache, num_caches, block_size=4):
@@ -13,7 +18,7 @@ class Bus:
                                                   cache.stats["W"]["HIT"]))
             elif op == "i":
                 print("Invalidations P%d %d" % (cache.cpu_id,
-                                                cache.stats["INVALIDATED"]))
+                                                cache.stats["INVALIDATES"]))
             elif op == "p":
                 print("Cache P%d %s" % (cache.cpu_id,
                                         [int_or_None(v) for v in cache.store]))
