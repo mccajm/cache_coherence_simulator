@@ -24,7 +24,7 @@ class MESICache(Cache):
         super(MESICache, self).__init__(*args, **kwargs)
 
     def run(self, cpu_id, op, address):
-        index, _, _ = super(MESICache, self).submit_msg(cpu_id, op, address)
+        index, _, hit = super(MESICache, self).submit_msg(cpu_id, op, address)
         if self.state_flags[index] == "SE":
             other_cpus = (i for i in range(4) if i != self.cpu_id)
             for cpu_id in other_cpus:

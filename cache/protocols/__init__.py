@@ -74,6 +74,9 @@ class Cache(object):
         elif self.invalidation_based and \
              self.state_flags[index] == "M" and old_flag not in ("M", "E"):
             self.stats["WRITEBACK"] += 1
+        elif not self.invalidation_based and \
+            self.state_flags[index] == "S" and old_flag == "M":
+            self.stats["WRITEBACK"] += 1
 
         if self.invalidation_based and is_me and op == "W":
             self.stats["INVALIDATES"] += 1
