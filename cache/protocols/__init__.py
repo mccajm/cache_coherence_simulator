@@ -25,7 +25,8 @@ class Cache(object):
                       "WRITEUPDATES": 0,
                       "WRITEUPDATED": 0,
                       "WRITEBACK": 0}
-        self.invalidation_based = ("I" in nested_dict_values(self.state_transitions))
+        self.invalidation_based = \
+            ("I" in nested_dict_values(self.state_transitions))
         self._reset()
 
     def _map_address_to_block(self, address):
