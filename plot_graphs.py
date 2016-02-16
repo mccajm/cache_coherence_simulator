@@ -78,12 +78,13 @@ def plot_data_messages():
     for i, cache in enumerate(("MSICache", "MESICache", "MESCache")):
         wu = get_stats_simple(stats[cache], "WRITEUPDATES")
         wb = get_stats_simple(stats[cache], "WRITEBACK")
+        print(list(get_stats_simple(stats[cache], "WRITEBACK")))
         total = [sum(x) for x in zip(wu, wb)]
         ax.bar(x+width*(i-1), total, width, color=plt.cm.coolwarm(i/4, 1), label=cache.rstrip("Cache"), lw=0)
    
     ax.set_xlabel("Block Size")
     ax.set_ylabel("Data Messages")
-    ax.legend(loc=5)
+    ax.legend(loc=1)
     ax.set_xticks(x+width/2)
     ax.set_xticklabels(2**(x+1))
     ax.xaxis.set_tick_params(size=0)
@@ -97,3 +98,4 @@ plot_miss()
 plot_hit()
 plot_invalidations()
 plot_data_messages()
+
