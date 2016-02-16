@@ -111,7 +111,7 @@ def plot_hit_ownership():
     ax.legend(loc=5)
     ax.set_xticks(x+2*width)
     ax.set_xticklabels(2**(x+1))
-    ax.grid()
+    ax.yaxis.grid()
     plt.title("Distribution of Memory Access at Different Block Sizes")
     plt.savefig("graphs/bs-shared.pdf")
 
