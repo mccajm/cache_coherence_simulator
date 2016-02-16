@@ -91,10 +91,35 @@ def plot_data_messages():
     plt.title("Data Messages at Different Block Sizes")
     plt.savefig("graphs/bs-data.pdf")
 
+def plot_hit_ownership():
+    fig = plt.figure()
+    width = 0.05
+    ax = fig.add_subplot(111)
+    x = numpy.arange(4)
+    for i, cache in enumerate(("MSICache", "MESICache", "MESCache")):
+        hit_priv = numpy.array(list(get_stats(stats[cache], "HIT_PRIV")))
+        hit = numpy.array(list(get_stats(stats[cache], "HIT")))
+        hit_shared = hit - hit_priv
+        hit_priv = hit_priv / hit * 100
+        hit_shared = hit_shared / hit * 100
+        ax.bar(x+width*(i-1), hit_priv, width, color=plt.cm.coolwarm(i/6), label="Private "+cache.rstrip("Cache"), lw=0)
+        ax.bar(x+width*(i+3-1), hit_shared, width, color=plt.cm.coolwarm((i+3)/6), label="Shared "+cache.rstrip("Cache"), lw=0)
+ 
+   
+    ax.set_xlabel("Block Size")
+    ax.set_ylabel("%")
+    ax.legend(loc=5)
+    ax.set_xticks(x+2*width)
+    ax.set_xticklabels(2**(x+1))
+    ax.yaxis.grid()
+    plt.title("Distribution of Memory Access at Different Block Sizes")
+    plt.savefig("graphs/bs-shared.pdf")
+
 
 print("Plotting graphs...")
 plot_miss()
 plot_hit()
 plot_invalidations()
 plot_data_messages()
+plot_hit_ownership()
 
