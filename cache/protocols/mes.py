@@ -45,6 +45,10 @@ class MESCache(Cache):
             other_cpus = (i for i in range(len(self.bus.caches)) if i != self.cpu_id)
             for cpu_id in other_cpus:
                 self.bus.caches[cpu_id].store[index] = tag
+                old_flag = self.bus.caches[cpu_id].state_flags[index]
+                if old_flag == "M":
+                    self.bus.caches[cpu_id].stats["WRITEBACK"] += 1
+
                 self.bus.caches[cpu_id].state_flags[index] = "S"
                 self.bus.caches[cpu_id].stats["WRITEUPDATED"] += 1
 
