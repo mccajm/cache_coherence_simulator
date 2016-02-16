@@ -78,7 +78,6 @@ def plot_data_messages():
     for i, cache in enumerate(("MSICache", "MESICache", "MESCache")):
         wu = get_stats_simple(stats[cache], "WRITEUPDATES")
         wb = get_stats_simple(stats[cache], "WRITEBACK")
-        print(list(get_stats_simple(stats[cache], "WRITEBACK")))
         total = [sum(x) for x in zip(wu, wb)]
         ax.bar(x+width*(i-1), total, width, color=plt.cm.coolwarm(i/4, 1), label=cache.rstrip("Cache"), lw=0)
    
