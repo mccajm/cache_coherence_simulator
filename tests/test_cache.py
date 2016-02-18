@@ -10,33 +10,31 @@ from utils import parse_line, convert_to_binary
 
 
 def parse_end_state(line):
-    line = line.split(": ")[1].split(";")
-    index = line[0]
-    states = line[1].split(",")
-    states[-1] = states[-1].rstrip("\n")
+    line = line.rstrip("\n").split(": ")[1]
+    index, states = line.split(";")
+    states = states.split(",")
     return (index, states)
 
-def states_match(expected_end_state, bus):
-    address, states = expected_end_state
-    binaddr = convert_to_binary(address)
-    index, _ = bus.caches[0]._map_address_to_block(binaddr)
-    end_states = ["%s" % c.state_flags[index] for c in bus.caches]
-    assert_equal(states, end_states)
+def states_match(expected_end_states, bus):
+    for address, states in expected_end_states:
+        binaddr = convert_to_binary(address)
+        index, _ = bus.caches[0]._map_address_to_block(binaddr)
+        end_states = ["%s" % c.state_flags[index] for c in bus.caches]
+        assert_equal(states, end_states)
 
 def run_trace(bus, f):
-    expected_end_state = None
+    expected_end_states = []
     for line in f:
         if line.startswith("#"):
-            if not expected_end_state and \
-                line.find("EndState:") != -1:
-                expected_end_state = parse_end_state(line)
+            if line.find("EndState:") != -1:
+                expected_end_states.append(parse_end_state(line))
                 
             continue
     
         line = parse_line(line)
         bus.process_transaction(*line)
 
-    states_match(expected_end_state, bus)
+    states_match(expected_end_states, bus)
 
 def test_all_traces():
     cache_by_name = {"msi": MSICache,
