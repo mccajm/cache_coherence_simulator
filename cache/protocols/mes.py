@@ -28,19 +28,16 @@ class MESCache(Cache):
         is_me = (cpu_id == self.cpu_id)
         if is_me:
             if hit:
-                if is_me:
-                    if self.state_flags[index] == "M":
-                        self.stats["WRITEBACK"] += 1
-                    elif op == "W" and self.state_flags[index] == "S":
-                        self.stats["WRITEBACK"] += 1
-                        self.stats["WRITEUPDATES"] += 1
-                        other_cpus = (i for i in range(len(self.bus.caches)) if i != self.cpu_id)
-                        for cpu_id in other_cpus:
-                            self.bus.caches[cpu_id].store[index] = tag
-                            old_flag = self.bus.caches[cpu_id].state_flags[index]
-
-                            self.bus.caches[cpu_id].state_flags[index] = "S"
-                            self.bus.caches[cpu_id].stats["WRITEUPDATED"] += 1
+                if self.state_flags[index] == "M":
+                    self.stats["WRITEBACK"] += 1
+                elif op == "W" and self.state_flags[index] == "S":
+                    self.stats["WRITEBACK"] += 1
+                    self.stats["WRITEUPDATES"] += 1
+                    other_cpus = (i for i in range(len(self.bus.caches)) if i != self.cpu_id)
+                    for cpu_id in other_cpus:
+                        self.bus.caches[cpu_id].store[index] = tag
+                        self.bus.caches[cpu_id].state_flags[index] = "S"
+                        self.bus.caches[cpu_id].stats["WRITEUPDATED"] += 1
             else:
                 other_cpus = (i for i in range(len(self.bus.caches)) if i != self.cpu_id)
                 for cpu_id in other_cpus:
