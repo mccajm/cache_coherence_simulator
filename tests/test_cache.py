@@ -11,7 +11,7 @@ from utils import parse_line, convert_to_binary
 
 def parse_end_state(line):
     line = line.rstrip("\n").split(": ")[1]
-    index, states = line.split(";")
+    index, states = line.split(" ")
     states = states.split(",")
     return (index, states)
 
