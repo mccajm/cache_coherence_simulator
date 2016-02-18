@@ -1,4 +1,5 @@
 import pickle
+import sys
 
 from tqdm import tqdm
 
@@ -14,7 +15,13 @@ def record_stats(stats, caches):
         stats[cache.__class__.__name__][cache.block_size] = cache.stats
 
 if __name__ == "__main__":
-    with open("trace", "r") as f:
+    try:
+        trace_file = sys.argv[1]
+    except IndexError:
+        print("Please supply a trace file as an argument.")
+        sys.exit(1)
+
+    with open(trace_file, "r") as f:
         lines = f.readlines()
 
     block_sizes = (2, 4, 8, 16)

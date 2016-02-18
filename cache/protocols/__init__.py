@@ -66,7 +66,6 @@ class Cache(object):
         old_flag = self.state_flags[index]
         self.state_flags[index] = \
             self.state_transitions[op][is_me][self.state_flags[index]]
-
         if self.state_flags[index] == "I" and old_flag != "I":
             self.stats["INVALIDATED"] += 1
         elif self.invalidation_based and \
