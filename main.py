@@ -35,7 +35,8 @@ if __name__ == "__main__":
             print("Processing trace with %s at block size %d..." % (cache_name, block_size))
             for line in tqdm(lines, leave=True):
                 line = parse_line(line)
-                bus.process_transaction(*line)
+                if line:
+                    bus.process_transaction(*line)
 
             record_stats(stats, bus.caches)
 

@@ -17,6 +17,9 @@ def convert_to_binary(i):
     return bin(address)[2:].zfill(32)
 
 def parse_line(line):
+    if line.startswith("#") or len(line) == 0:
+        return None  # comment or blank line
+
     line = line.split(" ")
     if len(line) == 1:
         op = line[0]

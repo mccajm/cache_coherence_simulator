@@ -26,8 +26,11 @@ def states_match(expected_end_state, bus):
 def run_trace(bus, f):
     expected_end_state = None
     for line in f:
-        if not expected_end_state:
-            expected_end_state = parse_end_state(line)
+        if line.startswith("#"):
+            if not expected_end_state and \
+                line.find("EndState:") != -1:
+                expected_end_state = parse_end_state(line)
+                
             continue
     
         line = parse_line(line)
