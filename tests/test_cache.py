@@ -16,7 +16,6 @@ def parse_end_state(line):
     states[-1] = states[-1].rstrip("\n")
     return (index, states)
 
-
 def states_match(expected_end_state, bus):
     address, states = expected_end_state
     binaddr = convert_to_binary(address)
