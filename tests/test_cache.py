@@ -17,35 +17,32 @@ def parse_end_state(line):
     return (index, states)
 
 
-class testCache:
+def states_match(expected_end_state, bus):
+    address, states = expected_end_state
+    binaddr = convert_to_binary(address)
+    index, _ = bus.caches[0]._map_address_to_block(binaddr)
+    end_states = [c.state_flags[index] for c in bus.caches]
+    assert_equal(states, end_states)
 
-    def states_match(self):
-        address, states = self.expected_end_state
-        binaddr = convert_to_binary(address)
-        index, _ = self.bus.caches[0]._map_address_to_block(binaddr)
-        end_states = [c.state_flags[index] for c in self.bus.caches]
-        assert_equal(states, end_states)
+def run_trace(bus, f):
+    expected_end_state = None
+    for line in f:
+        if not expected_end_state:
+            expected_end_state = parse_end_state(line)
+            continue
+    
+        line = parse_line(line)
+        bus.process_transaction(*line)
 
-    def run_trace(self, bus, f):
-        self.bus = bus
-        self.expected_end_state = None
-        for line in f:
-            if not self.expected_end_state:
-                self.expected_end_state = parse_end_state(line)
-                continue
-        
-            line = parse_line(line)
-            self.bus.process_transaction(*line)
+    states_match(expected_end_state, bus)
 
-        self.states_match()
-
-    def test_all_traces(self):
-        cache_by_name = {"msi": MSICache,
-                         "mesi": MESICache,
-                         "mes": MESCache}
-        for trace in listdir("tests/traces"):
-            name = trace.split("_")[0]
-            bus = Bus(cache_by_name[name], 4)
-            with open("tests/traces/%s" % trace) as f:
-                yield self.run_trace, bus, f
+def test_all_traces():
+    cache_by_name = {"msi": MSICache,
+                     "mesi": MESICache,
+                     "mes": MESCache}
+    for trace in listdir("tests/traces"):
+        name = trace.split("_")[0]
+        bus = Bus(cache_by_name[name], 4)
+        with open("tests/traces/%s" % trace) as f:
+            yield run_trace, bus, f
 
