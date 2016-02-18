@@ -20,7 +20,7 @@ def states_match(expected_end_state, bus):
     address, states = expected_end_state
     binaddr = convert_to_binary(address)
     index, _ = bus.caches[0]._map_address_to_block(binaddr)
-    end_states = [c.state_flags[index] for c in bus.caches]
+    end_states = ["%s" % c.state_flags[index] for c in bus.caches]
     assert_equal(states, end_states)
 
 def run_trace(bus, f):
