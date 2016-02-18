@@ -1,4 +1,4 @@
-from cache import Cache
+from cache.protocols import Cache
 
 
 class MSICache(Cache):
@@ -19,9 +19,6 @@ class MSICache(Cache):
                                                 "I": "I"}}}
         super(MSICache, self).__init__(*args, **kwargs)
 
-    def stage1(self):
-        pass
-
-    def stage2(self, cpu_id, op, address):
+    def run(self, cpu_id, op, address):
         super(MSICache, self).submit_msg(cpu_id, op, address)
 

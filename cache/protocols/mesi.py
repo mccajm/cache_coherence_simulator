@@ -1,4 +1,4 @@
-from cache import Cache
+from cache.protocols import Cache
 
 
 class MESICache(Cache):
@@ -23,27 +23,15 @@ class MESICache(Cache):
                                                 "E": "I"}}}
         super(MESICache, self).__init__(*args, **kwargs)
 
-    def stage1(self):
-        while True:
-            try:
-                cpu_id, op, address = self.buses[self.cpu_id].pop()
-            except IndexError:
-                break  # the bus is empty
+    def run(self, cpu_id, op, address):
+        index, _, hit = super(MESICache, self).submit_msg(cpu_id, op, address)
+        if self.state_flags[index] == "SE":
+            other_cpus = (i for i in range(4) if i != self.cpu_id)
+            for cpu_id in other_cpus:
+                if self.bus.caches[cpu_id].state_flags[index] in ("E", "S", "M"):
+                    self.state_flags[index] = "S"
+                    self.bus.caches[cpu_id].state_flags[index] = "S"
 
-            is_me = (cpu_id == self.cpu_id)
-            index, tag = self._map_address_to_block(address)
-            if op == "S" and self.state_flags[index] in ("ES", "SM"):
-                self.state_flags[index] = "S"
-            elif not is_me and op == "R":
-                if self.state_flags[index] in ("E", "S", "M"):
-                    self.buses[cpu_id].append((self.cpu_id, "S", address))
-
-        try:
-            se_flag_index = self.state_flags.index("SE")
-            self.state_flags[se_flag_index] = "E"
-        except ValueError:
-            pass
-
-    def stage2(self, *args):
-        super(MESICache, self).submit_msg(*args)
+            if self.state_flags[index] == "SE":
+                self.state_flags[index] = "E"
 
