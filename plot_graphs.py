@@ -2,6 +2,8 @@ import pickle
 import numpy
 import matplotlib.pyplot as plt
 
+# Plots graphs based on recorded .pkl file
+
 def get_stats(stats, key):
     for bs in (2,4,8,16):
         yield stats[bs]["R"][key] + stats[bs]["W"][key]
