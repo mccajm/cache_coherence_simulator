@@ -1,0 +1,11 @@
+###########################
+# Cache Coherence Simulator
+# Author: Adam McCarthy
+###########################
+
+To install external requirements:
+$ pip install -r requirements.txt
+
+For further information, run:
+$ pypy main.py -h
+
