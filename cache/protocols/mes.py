@@ -49,4 +49,6 @@ class MESCache(Cache):
                         self.state_flags[index] = "E"
                     else:
                         self.state_flags[index] = "M"
-     
+    
+        return hit
+

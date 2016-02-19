@@ -21,6 +21,12 @@ if __name__ == "__main__":
         print("Please supply a trace file as an argument.")
         sys.exit(1)
 
+    progress_bar = 1
+    try:
+        progress_bar = int(sys.argv[2])
+    except IndexError:
+        pass
+
     with open(trace_file, "r") as f:
         lines = f.readlines()
 
@@ -33,10 +39,19 @@ if __name__ == "__main__":
             bus = Bus(cache, 4, block_size=block_size)
 
             print("Processing trace with %s at block size %d..." % (cache_name, block_size))
-            for line in tqdm(lines, leave=True):
+            if progress_bar == 1:
+                pbar = tqdm(total=len(lines), leave=True)
+
+            for line in lines:
                 line = parse_line(line)
+                if progress_bar == 1:
+                    pbar.update(1)
+
                 if line:
                     bus.process_transaction(*line)
+
+            if progress_bar == 1:
+                pbar.close()
 
             record_stats(stats, bus.caches)
 

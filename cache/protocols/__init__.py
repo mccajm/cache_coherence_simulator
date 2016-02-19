@@ -31,7 +31,7 @@ class Cache(object):
 
     def _map_address_to_block(self, address):
         index = int(address[-(self.offset_bits + self.index_bits):-self.offset_bits], 2)
-        tag = address[:-(self.offset_bits + self.index_bits)]
+        tag = int(address[:-(self.offset_bits + self.index_bits)], 2)
         return (index, tag)
 
     def _reset(self):

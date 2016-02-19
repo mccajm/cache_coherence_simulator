@@ -23,7 +23,7 @@ def parse_line(line):
     line = line.split(" ")
     if len(line) == 1:
         op = line[0]
-        return (None, op, None)
+        return (None, op.rstrip("\n"), None)
     elif len(line) == 2:
         op, address = line
         return (None, op, address)

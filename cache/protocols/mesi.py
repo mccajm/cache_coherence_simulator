@@ -35,3 +35,5 @@ class MESICache(Cache):
             if self.state_flags[index] == "SE":
                 self.state_flags[index] = "E"
 
+        return hit
+

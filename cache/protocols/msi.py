@@ -20,5 +20,7 @@ class MSICache(Cache):
         super(MSICache, self).__init__(*args, **kwargs)
 
     def run(self, cpu_id, op, address):
-        super(MSICache, self).submit_msg(cpu_id, op, address)
+        _, _, hit = super(MSICache, self).submit_msg(cpu_id, op, address)
+
+        return hit
 
