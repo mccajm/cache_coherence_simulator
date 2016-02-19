@@ -1,3 +1,7 @@
+###########################
+# Cache Coherence Simulator
+# Author: Adam McCarthy
+###########################
 import pickle
 import sys
 
@@ -13,6 +17,9 @@ from utils import int_or_None, parse_line
 
 
 def record_stats(stats, caches):
+    """
+    Records the stats for each cache
+    """
     for cache in caches:
         stats[cache.__class__.__name__][cache.block_size] = cache.stats
 
@@ -33,28 +40,30 @@ if __name__ == "__main__":
         sys.exit(1)
 
     with open(args.filename[0], "r") as f:
-        lines = f.readlines()
+        trace_lines = f.readlines()
 
     block_sizes = (2, 4, 8, 16)
     stats = {}
     for cache in caches:
-        cache_name = str(cache).split("'")[1].split(".")[-1]
         if args.record:
-            stats[cache_name] = {}
+            stats[cache.__name__] = {}
 
         for block_size in block_sizes:
+            # Create an atomic bus with 4 caches
             bus = Bus(cache, 4, block_size=block_size)
 
-            print("Processing trace with %s at block size %d..." % (cache_name, block_size))
+            print("Processing trace with %s at block size %d..." % (cache.__name__, block_size))
             if not args.noprogress:
-                pbar = tqdm(total=len(lines), leave=True)
+                # Create a progressbar
+                pbar = tqdm(total=len(trace_lines), leave=True)
 
-            for line in lines:
+            for line in trace_lines:
+                # convert "P0 R 2 into (0, "R", 2)
                 line = parse_line(line)
                 if not args.noprogress:
                     pbar.update(1)
 
-                if line:
+                if line: # ignore comments (which are None)
                     bus.process_transaction(*line)
 
             if not args.noprogress:

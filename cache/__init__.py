@@ -6,15 +6,22 @@ from utils import convert_to_binary
 
 
 class Bus:
+    """
+    A simple atomic bus which distributes trace lines
+    amongst the caches and allows the caches
+    to query each other for state and updates.
+    """
 
     def __init__(self, cache, num_caches, block_size=4):
         self.verbose = False
+        self.hit_words = {True: "hit", False: "miss"}
         self.caches = []
         for i in range(num_caches):
+            # Pass self into the new cache so that it can reach the bus
             self.caches.append(cache(i, self, block_size=block_size))
 
     def print_stats(self, op, address=None):
-        if op == "v":
+        if op == "v": # Toggle verbose output
             self.verbose = not self.verbose
             return
 
@@ -27,6 +34,7 @@ class Bus:
                 print("Invalidations P%d %d" % (cache.cpu_id,
                                                 cache.stats["INVALIDATES"]))
             elif op == "p":
+                # If p has an address arg, only output that state
                 if address:
                     address = convert_to_binary(address)
                     index, _ = cache._map_address_to_block(address)
@@ -37,6 +45,9 @@ class Bus:
                 print("P%d %s" % (cache.cpu_id, data))
 
     def construct_verbose_message(self, cpu_id, op, address):
+        """
+        Builds a human readable representation of the current txn.
+        """
         op_word = {"R": "read", "W": "write"}
         state_word = {"M": "Modified", "E": "Exclusive",
                       "S": "Shared", "I": "Invalid"}
@@ -56,6 +67,10 @@ class Bus:
         return "%s\n" % msg
 
     def process_transaction(self, cpu_id, op, address):
+        """
+        Processes trace lines. If they're read or write txns,
+        they are distributed amongst the caches.
+        """
         if op not in ("R", "W"):
             self.print_stats(op, address)
             return
@@ -66,6 +81,5 @@ class Bus:
         for cache in self.caches:
             hit = cache.run(cpu_id, op, address)
             if self.verbose and cpu_id == cache.cpu_id:
-                hit_word = {True: "hit", False: "miss"}
-                print(verbose_msg % hit_word[hit])
+                print(verbose_msg % self.hit_words[hit])
 

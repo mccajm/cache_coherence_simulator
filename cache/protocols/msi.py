@@ -1,7 +1,10 @@
 from cache.protocols import Cache
 
-
 class MSICache(Cache):
+    """
+    Implements the MSI protocol by defining reset_state
+    and state_transitions.
+    """
 
     def __init__(self, *args, **kwargs):
         self.reset_state = "I"
