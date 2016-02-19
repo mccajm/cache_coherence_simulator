@@ -29,6 +29,7 @@ def plot_miss():
     ax.set_xticklabels(2**(x+1))
     ax.yaxis.grid()
     ax.xaxis.set_tick_params(size=0)
+    plt.title("Miss Rates at Different Block Sizes")
     plt.savefig("graphs/bs-miss.pdf")
 
 def plot_hit():
@@ -46,6 +47,7 @@ def plot_hit():
     ax.set_xticklabels(2**(x+1))
     ax.xaxis.set_tick_params(size=0)
     ax.yaxis.grid()
+    plt.title("Hit Rates at Different Block Sizes")
     plt.savefig("graphs/bs-hit.pdf")
 
 def plot_invalidations():
@@ -65,7 +67,8 @@ def plot_invalidations():
     ax.set_xticklabels(2**(x+1))
     ax.xaxis.set_tick_params(size=0)
     ax.yaxis.grid()
-    plt.savefig("graphs/bs-iu.pdf")
+    plt.title("Invalidations and Updates at Different Block Sizes")
+    plt.savefig("graphs/bs-invalidations_updates.pdf")
 
 def plot_data_messages():
     fig = plt.figure()
@@ -85,6 +88,7 @@ def plot_data_messages():
     ax.set_xticklabels(2**(x+1))
     ax.xaxis.set_tick_params(size=0)
     ax.yaxis.grid()
+    plt.title("Data Messages at Different Block Sizes")
     plt.savefig("graphs/bs-data.pdf")
 
 def plot_hit_ownership():
@@ -108,6 +112,7 @@ def plot_hit_ownership():
     ax.set_xticks(x+2*width)
     ax.set_xticklabels(2**(x+1))
     ax.yaxis.grid()
+    plt.title("Distribution of Memory Access at Different Block Sizes")
     plt.savefig("graphs/bs-shared.pdf")
 
 
