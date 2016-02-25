@@ -34,15 +34,13 @@ class Bus:
                 print("Invalidations P%d %d" % (cache.cpu_id,
                                                 cache.stats["INVALIDATES"]))
             elif op == "p":
-                # If p has an address arg, only output that state
+                print("P%d" % cache.cpu_id)
                 if address:
-                    address = convert_to_binary(address)
                     index, _ = cache._map_address_to_block(address)
-                    data = cache.state_flags[index]
+                    print("%d %d %s" % (index, cache.store[index], cache.state_flags[index]))
                 else:
-                    data = cache.state_flags
-
-                print("P%d %s" % (cache.cpu_id, data))
+                    for index, state in enumerate(cache.state_flags):
+                        print("%d %d %s" % (index, cache.store[index], state))
 
     def construct_verbose_message(self, cpu_id, op, address):
         """
